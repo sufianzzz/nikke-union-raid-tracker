@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nikke Union Raid Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-body:#f5f6fa; --bg-panel:#fff; --bg-th:#f0f2f8; --bg-mock:#fafafa; --bg-best:#eef6ff;
+  --border-main:#e0e0e0; --border-input:#d0d0d0; --border-light:#f0f0f0; --border-th:#e0e3f0; --border-best:#b3d0ff;
+  --text-main:#1a1a2e; --text-sub:#555; --text-muted:#888; --text-light:#aaa;
+  --primary:#3a6fd8; --primary-hover:#2a5cbe; --btn-outline-bg:#fff; --btn-outline-hover:#f0f0f0;
+}
+[data-theme="dark"]{
+  --bg-body:#121212; --bg-panel:#1e1e24; --bg-th:#2a2b36; --bg-mock:#252630; --bg-best:#1b2845;
+  --border-main:#3a3b4c; --border-input:#4a4b5c; --border-light:#2f303d; --border-th:#3a3b4c; --border-best:#2a4575;
+  --text-main:#e0e0e0; --text-sub:#aaa; --text-muted:#888; --text-light:#666;
+  --primary:#5c8df5; --primary-hover:#7ca5ff; --btn-outline-bg:#252630; --btn-outline-hover:#353644;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;font-size:13px;background:var(--bg-body);color:var(--text-main);transition:background .2s, color .2s;}
+a{color:var(--primary);}
+
+/* Header */
+.header{background:var(--bg-panel);border-bottom:1px solid var(--border-main);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.header h1{font-size:16px;font-weight:700;}
+.header-sub{font-size:11px;color:var(--text-muted);margin-top:2px;}
+.header-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.header-right label{font-size:12px;color:var(--text-sub);}
+select,input[type=text],input[type=number],input[type=password]{padding:6px 8px;border:1px solid var(--border-input);background:var(--bg-input);color:var(--text-main);border-radius:5px;font-family:inherit;font-size:12px;outline:none;transition:border-color .15s, background .15s;}
+select:focus,input:focus{border-color:var(--primary);background:var(--bg-input-focus);}
+.btn{padding:7px 14px;border-radius:5px;border:none;font-weight:600;font-size:12px;cursor:pointer;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-hover);}
+.btn-outline{background:var(--btn-outline-bg);border:1px solid var(--border-input);color:var(--text-main);}
+.btn-outline:hover{background:var(--btn-outline-hover);}
+
+/* Sync status */
+#sync-status{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-light);}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.dot.green{background:#28a745;}.dot.orange{background:#fd7e14;}.dot.red{background:#dc3545;}
+
+/* Main Layout */
+.main-wrap{padding:16px;display:flex;flex-direction:column;gap:12px;overflow-x:auto;}
+.content-wrap{display:flex;gap:16px;align-items:flex-start;flex-wrap:nowrap;}
+.table-wrap{flex:1;min-width:850px;}
+
+/* Boss Tabs & Editor */
+.boss-tabs{display:flex;gap:8px;width:100%;}
+.b-tab{flex:1;padding:12px;background:var(--bg-panel);border:1px solid var(--border-main);border-radius:8px 8px 0 0;cursor:pointer;text-align:center;font-weight:600;font-size:14px;color:var(--text-main);transition:all .15s;border-top-width:4px;}
+.b-tab.active{background:var(--bg-body);border-bottom-color:transparent;}
+.b-tab:hover:not(.active){background:var(--bg-hover);}
+.boss-editor{display:flex;gap:16px;padding:12px 16px;background:var(--bg-panel);border-radius:8px;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:4px;}
+.boss-editor label{font-size:12px;font-weight:600;color:var(--text-sub);display:flex;align-items:center;gap:8px;}
+
+.leaderboard-wrap{width:260px;background:var(--bg-panel);border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.08);padding:14px;flex-shrink:0;}
+.leaderboard-wrap h3{font-size:14px;margin-bottom:12px;color:var(--text-main);display:flex;align-items:center;gap:6px;}
+.lb-table{width:100%;border-collapse:collapse;}
+.lb-table th{text-align:left;font-size:10px;color:var(--text-muted);padding-bottom:6px;border-bottom:1px solid var(--border-main);}
+.lb-table td{padding:8px 0;border-bottom:1px solid var(--border-light);font-size:12px;}
+.lb-table tr:last-child td{border-bottom:none;}
+.lb-rank{font-weight:700;color:var(--text-light);width:24px;}
+.lb-name{font-weight:600;color:var(--text-bold);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;}
+.lb-dmg{text-align:right;font-weight:700;color:var(--primary);}
+
+.raid-table{width:100%;border-collapse:collapse;background:var(--bg-panel);border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.raid-table th{background:var(--bg-th);padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text-sub);border-bottom:2px solid var(--border-th);white-space:nowrap;}
+.raid-table td{padding:10px 12px;border-bottom:1px solid var(--border-light);vertical-align:top;}
+.col-num{width:32px;text-align:center;font-weight:700;color:var(--text-light);}
+.col-name{width:150px;}
+.col-sync{width:70px;}
+.col-mocks{min-width:440px;}
+.col-best{width:110px;text-align:right;}
+
+/* Name & sync inputs */
+.name-input{width:100%;border:none;background:transparent;font-weight:600;font-size:13px;color:var(--text-main);padding:0;outline:none;}
+.name-input:focus{background:var(--bg-input-focus);border-radius:4px;padding:2px 4px;}
+.sync-input{width:58px;text-align:center;}
+
+/* Mock rows */
+.mock-list{display:flex;flex-direction:column;gap:6px;}
+.mock-row{display:grid;grid-template-columns:20px 1fr 110px 70px;align-items:center;gap:8px;padding:5px 6px;border-radius:5px;background:var(--bg-mock);border:1px solid var(--border-row);}
+.mock-row.is-best{background:var(--bg-best);border-color:var(--border-best);}
+.mock-num{font-weight:700;font-size:11px;color:var(--text-light);text-align:center;}
+.slots{display:flex;gap:4px;}
+.slot{width:48px;height:58px;border:1px dashed var(--border-input);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--text-light);background:var(--bg-panel);overflow:hidden;transition:border-color .15s;}
+.slot:hover{border-color:var(--primary);color:var(--primary);}
+.slot.filled{border:1px solid var(--primary);background:var(--bg-panel);color:var(--primary);justify-content:flex-start;}
+.sname{width:100%;font-size:8px;background:#111;color:#fff;padding:3px 1px;text-align:center;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.slot-img{width:100%;height:44px;object-fit:cover;display:block;}
+.dmg-input{width:100%;text-align:right;font-weight:600;background:var(--bg-input);color:var(--text-main);border:1px solid var(--border-input);border-radius:4px;}
+.dmg-input:focus{background:var(--bg-input-focus);border-color:var(--primary);}
+.check-wrap{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-sub);white-space:nowrap;cursor:pointer;}
+.col-best strong{font-size:15px;color:var(--primary);}
+.col-best small{font-size:10px;color:var(--text-muted);display:block;margin-top:2px;}
+
+/* Modals */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;}
+.modal-box{background:var(--bg-panel);border-radius:10px;padding:24px;width:90%;max-width:460px;box-shadow:0 8px 32px rgba(0,0,0,.3);}
+.modal-box.wide{max-width:780px;}
+.modal-box h3{font-size:15px;margin-bottom:14px;}
+.form-row{margin-bottom:12px;}
+.form-row label{display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:var(--text-sub);}
+.form-row input{width:100%;background:var(--bg-input);color:var(--text-main);border-color:var(--border-input);}
+.form-row p{font-size:11px;color:var(--text-muted);margin-top:4px;}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+
+/* Unit modal */
+.unit-modal-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.unit-modal-header h3{margin:0;}
+#unit-search{flex:1;max-width:200px;background:var(--bg-input);color:var(--text-main);}
+.unit-filters{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;}
+.unit-filters select{padding:5px 8px;font-size:12px;border-radius:4px;border:1px solid var(--border-input);background:var(--bg-input);color:var(--text-main);}
+.unit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px;max-height:380px;overflow-y:auto;padding:4px;}
+.u-card{padding:6px 4px;border:1px solid var(--border-main);border-radius:5px;cursor:pointer;text-align:center;transition:border-color .15s,background .15s;display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--bg-panel);}
+.u-card:hover{border-color:var(--primary);background:var(--bg-hover);}
+.u-icon{width:64px;height:64px;object-fit:cover;border-radius:4px;display:block;}
+.u-icon-placeholder{width:64px;height:64px;background:var(--border-light);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text-light);}
+.u-cname{display:block;font-size:10px;font-weight:600;line-height:1.2;word-break:break-word;color:var(--text-main);}
+.u-cmfr{display:block;font-size:9px;color:var(--text-muted);margin-top:2px;}
+.u-celem{display:block;font-size:9px;margin-top:2px;font-weight:600;color:var(--text-sub);}
+.clear-card{border-color:#f0a0a0;color:#c00;font-size:12px;font-weight:700;}
+.clear-card:hover{background:#301010;border-color:#ff5555;color:#ff5555;}
+.elem-fire    { border-top: 3px solid #e53935; }  /* red         */
+.elem-water   { border-top: 3px solid #1e88e5; }  /* blue        */
+.elem-wind    { border-top: 3px solid #43a047; }  /* green       */
+.elem-iron    { border-top: 3px solid #f9a825; }  /* orangey yellow */
+.elem-electric{ border-top: 3px solid #8e24aa; }  /* purple      */
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div>
+    <h1>⚔ Nikke Union Raid Tracker</h1>
+    <div class="header-sub" id="sync-status"><span class="dot red"></span> Local Mode</div>
+  </div>
+  <div class="header-right">
+    <label>Members: <select id="member-count-select"></select></label>
+    <button class="btn btn-outline" id="theme-btn" title="Toggle Theme">🌓</button>
+    <button class="btn btn-outline" id="sync-btn">☁ Sync Settings</button>
+    <button class="btn btn-primary" id="share-btn">🔗 Share Link</button>
+  </div>
+</header>
+
+<div class="main-wrap">
+  <div class="boss-tabs" id="boss-tabs-container">
+    <!-- Tabs injected by JS -->
+  </div>
+  
+  <div class="boss-editor">
+    <label>Boss Name: <input type="text" id="boss-name-input" placeholder="e.g. Modernia" style="width:200px;"></label>
+  </div>
+
+  <div class="content-wrap">
+    <div class="table-wrap">
+      <table class="raid-table">
+        <thead>
+          <tr>
+            <th class="col-num">#</th>
+            <th class="col-name">Member Name</th>
+            <th class="col-sync">Sync Lv.</th>
+            <th class="col-mocks">Mock Attempts &nbsp;<small style="font-weight:400;color:#888">(Attempt# | Team | Damage | ✓ Done)</small></th>
+            <th class="col-best">Personal Best</th>
+          </tr>
+        </thead>
+        <tbody id="member-rows"></tbody>
+      </table>
+    </div>
+    
+    <div class="leaderboard-wrap">
+      <h3>🏆 Top Damage</h3>
+      <table class="lb-table">
+        <thead>
+          <tr>
+            <th style="width:24px">#</th>
+            <th>Name</th>
+            <th>Team</th>
+            <th style="text-align:right">Damage</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-rows"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Cloud Sync Modal -->
+<div class="modal-overlay" id="cloud-modal">
+  <div class="modal-box">
+    <h3>☁ Cloud Sync Settings</h3>
+    <p style="font-size:12px;color:#555;margin-bottom:14px;">
+      Use <a href="https://jsonbin.io" target="_blank">JSONBin.io</a> (free). Create an account → get your API key → create a Bin → paste IDs here. Then share the link with your union.
+    </p>
+    <div class="form-row">
+      <label>API Key (X-Master-Key)</label>
+      <input type="password" id="inp-key" placeholder="$2b$10$...">
+    </div>
+    <div class="form-row">
+      <label>Bin ID</label>
+      <input type="text" id="inp-bin" placeholder="6831abc...">
+      <p>Create a new Bin at jsonbin.io → copy the Bin ID shown after creation.</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="modal-close">Cancel</button>
+      <button class="btn btn-primary" id="modal-connect">Connect &amp; Sync</button>
+    </div>
+  </div>
+</div>
+
+<!-- Unit Select Modal -->
+<div class="modal-overlay" id="unit-modal">
+  <div class="modal-box wide">
+    <div class="unit-modal-header">
+      <h3>Select Nikke</h3>
+      <input type="text" id="unit-search" placeholder="Search name or manufacturer…">
+      <button class="btn btn-outline" id="unit-modal-close">✕ Close</button>
+    </div>
+    <div class="unit-filters">
+      <select id="filter-mfr">
+        <option value="all">All Manufacturers</option>
+        <option value="Elysion">Elysion</option>
+        <option value="Missilis">Missilis</option>
+        <option value="Tetra">Tetra</option>
+        <option value="Pilgrim">Pilgrim</option>
+        <option value="Abnormal">Abnormal</option>
+      </select>
+      <select id="filter-burst">
+        <option value="all">All Burst Types</option>
+        <option value="I">Burst I</option>
+        <option value="II">Burst II</option>
+        <option value="III">Burst III</option>
+      </select>
+      <select id="filter-element">
+        <option value="all">All Elements</option>
+        <option value="Fire">🔥 Fire</option>
+        <option value="Water">💧 Water</option>
+        <option value="Wind">🌪 Wind</option>
+        <option value="Iron">⚙ Iron</option>
+        <option value="Electric">⚡ Electric</option>
+      </select>
+    </div>
+    <div class="unit-grid" id="unit-grid"></div>
+  </div>
+</div>
+
+<script src="units.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
