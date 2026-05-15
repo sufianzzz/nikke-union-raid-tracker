@@ -68,7 +68,6 @@ function init() {
     renderTabs();
     renderTable();
     bindStatic();
-    setInterval(pollCloud, 15000);
 }
 
 // Theme Handling
@@ -120,46 +119,6 @@ function save() {
 
 function saveAndPush() {
     save();
-    if (state.config.cloudApiKey && state.config.cloudBinId) pushCloud();
-}
-
-// Cloud
-function setStatus(txt, color) {
-    var el = document.getElementById('sync-status');
-    el.innerHTML = '<span class="dot ' + color + '"></span> ' + txt;
-}
-
-function pollCloud() {
-    if (!state.config.cloudApiKey || !state.config.cloudBinId) return;
-    fetchCloud(true);
-}
-
-function fetchCloud(silent) {
-    setStatus('Syncing...', 'orange');
-    fetch('https://api.jsonbin.io/v3/b/' + state.config.cloudBinId + '/latest', {
-        headers: { 'X-Master-Key': state.config.cloudApiKey }
-    }).then(function(r) { return r.json(); }).then(function(data) {
-        var rec = data.record;
-        if (rec && rec.members) {
-            state.members = rec.members;
-            state.config.memberCount = rec.config ? rec.config.memberCount : state.config.memberCount;
-            save();
-            document.getElementById('member-count-select').value = state.config.memberCount;
-            renderTable();
-            setStatus('Synced ✓', 'green');
-        }
-    }).catch(function() { setStatus('Sync Error', 'red'); });
-}
-
-function pushCloud() {
-    setStatus('Saving...', 'orange');
-    fetch('https://api.jsonbin.io/v3/b/' + state.config.cloudBinId, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', 'X-Master-Key': state.config.cloudApiKey },
-        body: JSON.stringify({ members: state.members, config: { memberCount: state.config.memberCount } })
-    }).then(function(r) {
-        if (r.ok) setStatus('Saved ✓', 'green'); else setStatus('Push Error', 'red');
-    }).catch(function() { setStatus('Push Error', 'red'); });
 }
 
 // Render
@@ -230,6 +189,7 @@ function renderMocks(m, mocks) {
         html += '<label class="check-wrap"><input type="checkbox" class="act-check"' + (mock.isActual?' checked':'') + '> Done</label>';
         html += '</div>';
     });
+    html += '<button class="add-mock-btn" data-mid="' + m.id + '">+ Add Team</button>';
     html += '</div>';
     return html;
 }
@@ -297,28 +257,6 @@ function bindStatic() {
         renderTable();
     };
 
-    document.getElementById('sync-btn').onclick = function() {
-        document.getElementById('cloud-modal').style.display = 'flex';
-    };
-    document.getElementById('modal-close').onclick = function() {
-        document.getElementById('cloud-modal').style.display = 'none';
-    };
-    document.getElementById('modal-connect').onclick = function() {
-        var key = document.getElementById('inp-key').value.trim();
-        var bin = document.getElementById('inp-bin').value.trim();
-        if (!key || !bin) { alert('Please enter both API Key and Bin ID.'); return; }
-        state.config.cloudApiKey = key;
-        state.config.cloudBinId = bin;
-        save();
-        document.getElementById('cloud-modal').style.display = 'none';
-        fetchCloud(false);
-    };
-    document.getElementById('share-btn').onclick = function() {
-        if (!state.config.cloudBinId) { alert('Set up Cloud Sync first via Sync Settings.'); return; }
-        var url = location.href.split('?')[0] + '?bin=' + state.config.cloudBinId;
-        navigator.clipboard.writeText(url).then(function() { alert('Link copied!\n\n' + url); });
-    };
-
     // Roster modal
     document.getElementById('roster-btn').onclick = function() {
         var names = state.members.slice(0, state.config.memberCount).map(function(m) { return m.name; }).join('\n');
@@ -356,13 +294,6 @@ function bindStatic() {
             }
         });
     });
-
-    // Check URL param — pre-fill bin from URL
-    var binParam = new URLSearchParams(location.search).get('bin');
-    if (binParam) {
-        state.config.cloudBinId = binParam;
-        document.getElementById('inp-bin').value = binParam;
-    }
 }
 
 // Bind row events (re-bound on each render)
@@ -456,6 +387,19 @@ function bindRows() {
                     }
                 }
             } catch(err) {}
+        };
+    });
+    
+    document.querySelectorAll('.add-mock-btn').forEach(function(el) {
+        el.onclick = function() {
+            var m = findMember(el.dataset.mid);
+            if (m) {
+                var mocks = m.bossData[activeBossId].mocks;
+                var nextId = mocks.length > 0 ? Math.max.apply(null, mocks.map(function(mk) { return mk.id; })) + 1 : 0;
+                mocks.push({ id: nextId, team: [null, null, null, null, null], damage: 0, isActual: false });
+                saveAndPush();
+                renderTable();
+            }
         };
     });
 }
