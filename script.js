@@ -219,7 +219,7 @@ function renderMocks(m, mocks) {
         mock.team.forEach(function(uid, idx) {
             var unit = uid ? NIKKE_UNITS.find(function(u){ return u.id===uid; }) : null;
             var slotImg = unit ? (unit.image || ('https://nikke.gg/wp-content/uploads/characters/icon/' + unit.id + '.webp')) : null;
-            html += '<div class="slot' + (unit?' filled':'') + '" data-idx="' + idx + '">' +
+            html += '<div class="slot' + (unit?' filled':'') + '" data-idx="' + idx + '"' + (unit?' draggable="true"':'') + '>' +
                 (unit
                     ? '<img src="' + slotImg + '" class="slot-img" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'block\'"><span class="sname">' + escHtml(unit.name) + '</span>'
                     : '+') +
@@ -379,6 +379,52 @@ function bindRows() {
             var row = el.closest('.mock-row');
             activeSel = { memberId: row.dataset.mid, mockId: parseInt(row.dataset.mockid), slotIdx: parseInt(el.dataset.idx) };
             openUnitModal();
+        };
+
+        // Drag and Drop (only within the same mock row)
+        if (el.getAttribute('draggable') === 'true') {
+            el.ondragstart = function(e) {
+                var row = el.closest('.mock-row');
+                e.dataTransfer.setData('text/plain', JSON.stringify({
+                    mid: row.dataset.mid,
+                    mockid: parseInt(row.dataset.mockid),
+                    idx: parseInt(el.dataset.idx)
+                }));
+                el.style.opacity = '0.5';
+            };
+            el.ondragend = function(e) { el.style.opacity = '1'; };
+        }
+        
+        el.ondragover = function(e) {
+            e.preventDefault(); // Allow drop
+            el.style.borderColor = 'var(--primary)';
+        };
+        el.ondragleave = function(e) { el.style.borderColor = ''; };
+        el.ondrop = function(e) {
+            e.preventDefault();
+            el.style.borderColor = '';
+            var data = e.dataTransfer.getData('text/plain');
+            if (!data) return;
+            try {
+                var src = JSON.parse(data);
+                var row = el.closest('.mock-row');
+                var targetMid = row.dataset.mid;
+                var targetMockid = parseInt(row.dataset.mockid);
+                var targetIdx = parseInt(el.dataset.idx);
+                
+                // Swap only if same team
+                if (src.mid === targetMid && src.mockid === targetMockid && src.idx !== targetIdx) {
+                    var m = findMember(targetMid);
+                    var mk = m && m.bossData[activeBossId].mocks[targetMockid];
+                    if (mk) {
+                        var temp = mk.team[src.idx];
+                        mk.team[src.idx] = mk.team[targetIdx];
+                        mk.team[targetIdx] = temp;
+                        saveAndPush();
+                        renderTable();
+                    }
+                }
+            } catch(err) {}
         };
     });
 }
