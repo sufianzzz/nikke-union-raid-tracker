@@ -8,12 +8,14 @@
 <style>
 :root{
   --bg-body:#f5f6fa; --bg-panel:#fff; --bg-th:#f0f2f8; --bg-mock:#fafafa; --bg-best:#eef6ff;
+  --bg-input:#ffffff; --bg-input-focus:#ffffff;
   --border-main:#e0e0e0; --border-input:#d0d0d0; --border-light:#f0f0f0; --border-th:#e0e3f0; --border-best:#b3d0ff;
   --text-main:#1a1a2e; --text-sub:#555; --text-muted:#888; --text-light:#aaa;
   --primary:#3a6fd8; --primary-hover:#2a5cbe; --btn-outline-bg:#fff; --btn-outline-hover:#f0f0f0;
 }
 [data-theme="dark"]{
   --bg-body:#121212; --bg-panel:#1e1e24; --bg-th:#2a2b36; --bg-mock:#252630; --bg-best:#1b2845;
+  --bg-input:#252630; --bg-input-focus:#2a2b36;
   --border-main:#3a3b4c; --border-input:#4a4b5c; --border-light:#2f303d; --border-th:#3a3b4c; --border-best:#2a4575;
   --text-main:#e0e0e0; --text-sub:#aaa; --text-muted:#888; --text-light:#666;
   --primary:#5c8df5; --primary-hover:#7ca5ff; --btn-outline-bg:#252630; --btn-outline-hover:#353644;
@@ -137,6 +139,7 @@ select:focus,input:focus{border-color:var(--primary);background:var(--bg-input-f
     <div class="header-sub" id="sync-status"><span class="dot red"></span> Local Mode</div>
   </div>
   <div class="header-right">
+    <button class="btn btn-outline" id="roster-btn">Manage Roster</button>
     <label>Members: <select id="member-count-select"></select></label>
     <button class="btn btn-outline" id="theme-btn" title="Toggle Theme">🌓</button>
     <button class="btn btn-outline" id="sync-btn">☁ Sync Settings</button>
@@ -209,6 +212,21 @@ select:focus,input:focus{border-color:var(--primary);background:var(--bg-input-f
   </div>
 </div>
 
+<!-- Roster Modal -->
+<div class="modal-overlay" id="roster-modal">
+  <div class="modal-box">
+    <h3>📋 Manage Roster</h3>
+    <p style="font-size:12px;color:var(--text-sub);margin-bottom:14px;">
+      Paste your 32 members here (one name per line). This will overwrite all names and sync across all boss tabs.
+    </p>
+    <textarea id="inp-roster" style="width:100%;height:300px;background:var(--bg-input);color:var(--text-main);border:1px solid var(--border-input);border-radius:4px;padding:8px;font-size:12px;resize:vertical;" placeholder="Member 1&#10;Member 2&#10;..."></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="roster-close">Cancel</button>
+      <button class="btn btn-primary" id="roster-save">Save Roster</button>
+    </div>
+  </div>
+</div>
+
 <!-- Unit Select Modal -->
 <div class="modal-overlay" id="unit-modal">
   <div class="modal-box wide">
@@ -234,11 +252,11 @@ select:focus,input:focus{border-color:var(--primary);background:var(--bg-input-f
       </select>
       <select id="filter-element">
         <option value="all">All Elements</option>
-        <option value="Fire">🔥 Fire</option>
-        <option value="Water">💧 Water</option>
-        <option value="Wind">🌪 Wind</option>
-        <option value="Iron">⚙ Iron</option>
-        <option value="Electric">⚡ Electric</option>
+        <option value="Fire">Fire</option>
+        <option value="Water">Water</option>
+        <option value="Wind">Wind</option>
+        <option value="Iron">Iron</option>
+        <option value="Electric">Electric</option>
       </select>
     </div>
     <div class="unit-grid" id="unit-grid"></div>

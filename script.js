@@ -319,12 +319,43 @@ function bindStatic() {
         navigator.clipboard.writeText(url).then(function() { alert('Link copied!\n\n' + url); });
     };
 
+    // Roster modal
+    document.getElementById('roster-btn').onclick = function() {
+        var names = state.members.slice(0, state.config.memberCount).map(function(m) { return m.name; }).join('\n');
+        document.getElementById('inp-roster').value = names;
+        document.getElementById('roster-modal').style.display = 'flex';
+    };
+    document.getElementById('roster-close').onclick = function() {
+        document.getElementById('roster-modal').style.display = 'none';
+    };
+    document.getElementById('roster-save').onclick = function() {
+        var lines = document.getElementById('inp-roster').value.split('\n');
+        for (var i = 0; i < state.config.memberCount; i++) {
+            if (lines[i] !== undefined) {
+                state.members[i].name = lines[i].trim() || ('Member ' + (i + 1));
+            }
+        }
+        saveAndPush();
+        document.getElementById('roster-modal').style.display = 'none';
+        renderTable();
+    };
+
     // Unit modal close
     document.getElementById('unit-modal-close').onclick = closeUnitModal;
     document.getElementById('unit-search').oninput = renderUnitGrid;
     document.getElementById('filter-mfr').onchange = renderUnitGrid;
     document.getElementById('filter-burst').onchange = renderUnitGrid;
     document.getElementById('filter-element').onchange = renderUnitGrid;
+
+    // Close modals on clicking overlay background
+    document.querySelectorAll('.modal-overlay').forEach(function(overlay) {
+        overlay.addEventListener('mousedown', function(e) {
+            if (e.target === overlay) {
+                overlay.style.display = 'none';
+                if (overlay.id === 'unit-modal') activeSel = null;
+            }
+        });
+    });
 
     // Check URL param — pre-fill bin from URL
     var binParam = new URLSearchParams(location.search).get('bin');
