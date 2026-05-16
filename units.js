@@ -24,4 +24,6 @@
 var NIKKE_UNITS = [
     { id: 'liter', name: 'Liter', manufacturer: 'Missilis', burst: 'I', element: 'Iron', rarity: 'SSR', image: 'https://nikke-db-legacy.pages.dev/images/sprite/si_c082_00_s.png' },
     { id: 'crown', name: 'Crown', manufacturer: 'Pilgrim', burst: 'II', element: 'Iron', rarity: 'SSR', image: 'https://nikke-db-legacy.pages.dev/images/sprite/si_c330_01_00_s.png' },
+    { id: 'emma', name: 'Emma', manufacturer: 'Elysion', burst: 'I', element: 'Fire', rarity: 'SSR', image: 'https://nikke-db-legacy.pages.dev/images/sprite/si_c090_00_s.png' },
+    { id: 'emma_techtical_upgrade', name: 'Emma: Techtical Upgrade', manufacturer: 'Elysion', burst: 'I', element: 'Fire', rarity: 'SSR', image: 'https://nikke-db-legacy.pages.dev/images/sprite/si_c093_00_s.png' },
 ];
